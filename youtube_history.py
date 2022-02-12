@@ -152,7 +152,8 @@ class Analysis:
         if not watch_history.is_file():
             raise ValueError(f'"{watch_history}" is not a file. Did you download your YouTube data? ')
         print('Extracting video urls from Takeout.'); sys.stdout.flush()
-        soup = BeautifulSoup(watch_history.read_text(), 'html.parser')
+        with open(watch_history, encoding='utf8') as history:
+            soup = BeautifulSoup(history, 'html.parser', from_encoding="utf8")
         urls = [u.get('href') for u in soup.find_all('a')]
         videos = [u for u in urls if 'www.youtube.com/watch' in u]
         url_path = self.path / 'urls.txt'
@@ -277,8 +278,8 @@ class Analysis:
         self.least_viewed = low_views.sample(min(len(low_views), 10), random_state=0)
         self.df['deciles'] = pd.qcut(self.df['view_count'], 10, labels=False)
         grouped = self.df.groupby(by='deciles')
-        self.best_per_decile = self.df.iloc[grouped['average_rating'].idxmax()]
-        self.worst_per_decile = self.df.iloc[grouped['average_rating'].idxmin()]
+        self.best_per_decile = self.df.iloc[grouped['like_count'].idxmax()]
+        self.worst_per_decile = self.df.iloc[grouped['like_count'].idxmin()]
 
     def most_emojis_description(self):
         def _emoji_variety(desc):
